@@ -29,6 +29,13 @@
             <version>0.8.1</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Apache Commons Compress: TAR archive manipulation -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.20</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
