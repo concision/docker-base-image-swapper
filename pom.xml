@@ -36,6 +36,13 @@
             <version>1.20</version>
             <scope>compile</scope>
         </dependency>
+        <!-- JSON: JSON parsing -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20200518</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
