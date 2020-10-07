@@ -22,6 +22,13 @@
     </properties>
 
     <dependencies>
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.12</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- Argparse4J: CLI argument parsing -->
         <dependency>
             <groupId>net.sourceforge.argparse4j</groupId>
