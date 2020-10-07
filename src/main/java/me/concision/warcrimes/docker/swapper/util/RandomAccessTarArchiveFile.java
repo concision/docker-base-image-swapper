@@ -20,12 +20,15 @@ import java.util.Map;
 import java.util.Set;
 
 public class RandomAccessTarArchiveFile extends InputStream implements Iterable<RandomAccessTarArchiveFile.ArchiveEntryOffset> {
+    @Accessors(fluent = false)
     @Getter
     private final File file;
 
     private final RandomAccessBufferedFileInputStream stream;
     private TarArchiveInputStream tarStream;
 
+    @Accessors(fluent = false)
+    @Getter
     private IndexState state = IndexState.UNINDEXED;
     private final Map<String, ArchiveEntryOffset> entries = new LinkedHashMap<>();
 
@@ -108,7 +111,7 @@ public class RandomAccessTarArchiveFile extends InputStream implements Iterable<
 
     @Value
     public static class ArchiveEntryOffset {
-        @Accessors // (fluent = false)
+        @Accessors(fluent = false)
         long offset;
 
         @Delegate

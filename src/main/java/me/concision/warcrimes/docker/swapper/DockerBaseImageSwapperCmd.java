@@ -5,6 +5,9 @@ import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.impl.type.FileArgumentType;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 public class DockerBaseImageSwapperCmd {
     public static void main(String[] cliArgs) {
@@ -66,15 +69,19 @@ public class DockerBaseImageSwapperCmd {
         // parse namespace, or exit runtime
         Namespace namespace = parser.parseArgsOrFail(cliArgs);
 
-
         // convert to runtime configuration
         CommandArguments arguments = CommandArguments.from(namespace);
 
+        // initialize logging mechanism
+        Logger log = LogManager.getLogger(DockerBaseImageSwapperCmd.class);
+        log.debug("Namespace: {}", namespace);
+
         // execute extraction process
         try {
-            new DockerBaseImageSwapper(arguments).execute();
+            new DockerBaseImageSwapper(arguments)
+                    .execute();
         } catch (Throwable throwable) {
-            throwable.printStackTrace();
+            log.info("Failed to execute Docker image swapping process", throwable);
             System.exit(-1);
         }
     }
