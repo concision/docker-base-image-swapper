@@ -1,11 +1,11 @@
 package me.concision.warcrimes.docker.swapper.archive;
 
 import lombok.NonNull;
+import me.concision.warcrimes.docker.swapper.archive.DockerImage.Bytes;
 import me.concision.warcrimes.docker.swapper.archive.DockerImage.ImageLayer;
 import me.concision.warcrimes.docker.swapper.archive.DockerImage.SubImage;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,7 +28,7 @@ import java.util.Map.Entry;
 public class DockerImageIO {
     public static DockerImage read(@NonNull InputStream inputStream) throws IOException {
         // read tar archive
-        Map<String, byte[]> files = new LinkedHashMap<>();
+        Map<String, Bytes> files = new LinkedHashMap<>();
         {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             try (ArchiveInputStream stream = new TarArchiveInputStream(inputStream)) {
@@ -39,16 +38,16 @@ public class DockerImageIO {
 
                     if (!entry.isDirectory() && stream.canReadEntryData(entry)) {
                         IOUtils.copy(stream, buffer);
-                        files.put(entry.getName(), buffer.toByteArray());
+                        files.put(entry.getName(), new Bytes(buffer.toByteArray()));
                     }
                 }
             }
         }
 
         // read manifest
-        byte[] manifestEntry = files.remove("manifest.json");
+        Bytes manifestEntry = files.remove("manifest.json");
         if (manifestEntry == null) throw new RuntimeException("Docker image archive does not have a manifest.json");
-        JSONArray manifest = new JSONArray(new String(manifestEntry, StandardCharsets.UTF_8));
+        JSONArray manifest = new JSONArray(new String(manifestEntry.bytes(), StandardCharsets.UTF_8));
 
         // read subimages
         List<SubImage> subimages = new ArrayList<>();
@@ -58,7 +57,7 @@ public class DockerImageIO {
 
             // read configuration
             String configName = subimageManifest.getString("Config");
-            JSONObject config = new JSONObject(new String(files.remove(configName), StandardCharsets.ISO_8859_1));
+            JSONObject config = new JSONObject(new String(files.remove(configName).bytes(), StandardCharsets.ISO_8859_1));
 
             List<ImageLayer> layers = new ArrayList<>();
             JSONArray layerReferences = subimageManifest.getJSONArray("Layers");
@@ -68,14 +67,14 @@ public class DockerImageIO {
                 String layerRoot = layerArchiveAbsoluteName.substring(0, layerArchiveAbsoluteName.lastIndexOf('/'));
 
                 // read layer manifest
-                JSONObject layerManifest = new JSONObject(new String(files.remove(layerRoot + "/json"), StandardCharsets.ISO_8859_1));
+                JSONObject layerManifest = new JSONObject(new String(files.remove(layerRoot + "/json").bytes(), StandardCharsets.ISO_8859_1));
 
                 // read all other layer files
-                Map<String, byte[]> layerFiles = new LinkedHashMap<>();
-                for (Iterator<Entry<String, byte[]>> iterator = files.entrySet().iterator(); iterator.hasNext(); ) {
-                    Entry<String, byte[]> fileEntry = iterator.next();
+                Map<String, Bytes> layerFiles = new LinkedHashMap<>();
+                for (Iterator<Entry<String, Bytes>> iterator = files.entrySet().iterator(); iterator.hasNext(); ) {
+                    Entry<String, Bytes> fileEntry = iterator.next();
                     if (fileEntry.getKey().startsWith(layerRoot + "/")) {
-                        layerFiles.put(fileEntry.getKey(), fileEntry.getValue());
+                        layerFiles.put(fileEntry.getKey().substring(layerRoot.length() + 1), fileEntry.getValue());
                         iterator.remove();
                     }
                 }
@@ -113,15 +112,15 @@ public class DockerImageIO {
                     write(stream, layer.root() + "/json", layer.manifest().toString().getBytes(StandardCharsets.UTF_8));
 
                     // write layer archive
-                    for (Entry<String, byte[]> fileEntry : layer.files().entrySet()) {
-                        write(stream, fileEntry.getKey(), fileEntry.getValue());
+                    for (Entry<String, Bytes> fileEntry : layer.files().entrySet()) {
+                        write(stream, layer.root() + "/" + fileEntry.getKey(), fileEntry.getValue().bytes());
                     }
                 }
             }
 
             // write any remaining files
-            for (Entry<String, byte[]> fileEntry : image.files().entrySet()) {
-                write(stream, fileEntry.getKey(), fileEntry.getValue());
+            for (Entry<String, Bytes> fileEntry : image.files().entrySet()) {
+                write(stream, fileEntry.getKey(), fileEntry.getValue().bytes());
             }
         }
     }

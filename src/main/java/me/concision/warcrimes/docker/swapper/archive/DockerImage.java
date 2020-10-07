@@ -11,7 +11,12 @@ import java.util.Map;
 public class DockerImage {
     JSONArray manifest;
     List<SubImage> images;
-    Map<String, byte[]> files;
+    Map<String, Bytes> files;
+
+    @Value
+    public static class Bytes {
+        byte[] bytes;
+    }
 
     @Value
     public static class SubImage {
@@ -24,6 +29,6 @@ public class DockerImage {
     public static class ImageLayer {
         String root;
         JSONObject manifest;
-        Map<String, byte[]> files;
+        Map<String, Bytes> files;
     }
 }
