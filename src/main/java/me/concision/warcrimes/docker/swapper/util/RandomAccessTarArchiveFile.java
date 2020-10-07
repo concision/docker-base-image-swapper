@@ -34,7 +34,6 @@ public class RandomAccessTarArchiveFile extends InputStream implements Iterable<
 
     public RandomAccessTarArchiveFile(@NonNull File file) throws IOException {
         this.file = file;
-
         stream = new RandomAccessBufferedFileInputStream(file);
     }
 
@@ -99,6 +98,14 @@ public class RandomAccessTarArchiveFile extends InputStream implements Iterable<
         stream.seek(entry.offset);
         tarStream = new TarArchiveInputStream(stream);
         return tarStream.getNextTarEntry();
+    }
+
+    public byte[] readFullEntry(@NonNull String filename) throws IOException {
+        TarArchiveEntry manifest = this.seek(filename);
+        byte[] buffer = new byte[(int) manifest.getSize()];
+        IOUtils.readFully(this, buffer);
+        tarStream = null;
+        return buffer;
     }
 
     // structures
