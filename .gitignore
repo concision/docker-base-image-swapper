@@ -1,4 +1,5 @@
 ### Project ###
+*.tar
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/git,maven,java,visualstudiocode,intellij+all,eclipse,netbeans,windows,linux,macos
