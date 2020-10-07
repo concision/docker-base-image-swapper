@@ -2,6 +2,7 @@ package me.concision.warcrimes.docker.swapper;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.impl.type.FileArgumentType;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.Namespace;
 
@@ -13,7 +14,7 @@ public class DockerBaseImageSwapperCmd {
         }
 
         // construct argument parser
-        ArgumentParser parser = ArgumentParsers.newFor("unpacker")
+        ArgumentParser parser = ArgumentParsers.newFor("swapper")
                 // flag prefix
                 .prefixChars("--")
                 // width
@@ -26,31 +27,41 @@ public class DockerBaseImageSwapperCmd {
 
         parser.addArgument("--old-base-image")
                 .help("The .tar archive of the old base image that will be replaced in the application image")
-                .metavar("old-base-image.tar")
+                .metavar("image:tag")
                 .dest("base_image_old")
                 .required(true)
-                .type(Arguments.fileType().verifyCanRead());
+                .type(String.class);
 
         parser.addArgument("--new-base-image")
                 .help("The .tar archive of the new base image that the application image will be swapped to")
-                .metavar("new-base-image.tar")
+                .metavar("image:tag")
                 .dest("base_image_new")
                 .required(true)
-                .type(Arguments.fileType().verifyCanRead());
+                .type(String.class);
 
-        parser.addArgument("--application-image")
-                .help("The .tar archive of the application image that needs to the base image to be swapped")
-                .metavar("app-image.tar")
-                .dest("app_image_input")
+        parser.addArgument("--input-image")
+                .help("The .tar archive of the application image that needs the base image swapped")
+                .metavar("image:tag")
+                .dest("image_input")
                 .required(true)
-                .type(Arguments.fileType().verifyCanRead());
+                .type(String.class);
 
         parser.addArgument("--output-image")
-                .help("The path location to write the new .tar archived of the newly created application image")
+                .help("The file path to write the new .tar archived of the newly created application image.\n" +
+                        "If unspecified, writes to standard out.")
                 .metavar("swapped-base-app-image.tar")
-                .dest("app_image_output")
-                .required(true)
+                .dest("image_output")
+                .required(false)
                 .type(Arguments.fileType().verifyCanCreate());
+
+        parser.addArgument("images")
+                .help("List of Docker image archives")
+                .metavar("image.tar")
+                .dest("images")
+                .required(true)
+                .nargs("*")
+                .type(new FileArgumentType().verifyCanRead());
+
 
         // parse namespace, or exit runtime
         Namespace namespace = parser.parseArgsOrFail(cliArgs);
@@ -60,7 +71,6 @@ public class DockerBaseImageSwapperCmd {
         CommandArguments arguments = CommandArguments.from(namespace);
 
         // execute extraction process
-        System.out.println("Argument namespace: " + namespace);
         try {
             new DockerBaseImageSwapper(arguments).execute();
         } catch (Throwable throwable) {
