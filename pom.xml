@@ -36,6 +36,13 @@
             <version>0.8.1</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Log4J: Logging -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.13.3</version>
+            <scope>compile</scope>
+        </dependency>
         <!-- Apache Commons Compress: TAR archive manipulation -->
         <dependency>
             <groupId>org.apache.commons</groupId>
