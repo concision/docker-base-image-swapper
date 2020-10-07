@@ -43,6 +43,13 @@
             <version>1.20</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Apache PDFBox: Provides RandomAccessBufferedFileInputStream -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.21</version>
+            <scope>compile</scope>
+        </dependency>
         <!-- JSON: JSON parsing -->
         <dependency>
             <groupId>org.json</groupId>
