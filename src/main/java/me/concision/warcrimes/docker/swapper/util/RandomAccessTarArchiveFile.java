@@ -84,6 +84,12 @@ public class RandomAccessTarArchiveFile extends InputStream implements Iterable<
         return entries.get(filename);
     }
 
+    public ArchiveEntryOffset tryGetEntry(@NonNull String filename) {
+        ArchiveEntryOffset archiveEntry = entries.get(filename);
+        if (archiveEntry == null) throw new RuntimeException("entry does not exist in archive: " + filename);
+        return archiveEntry;
+    }
+
     @Override
     public Iterator<ArchiveEntryOffset> iterator() {
         return entries.values().iterator();
@@ -92,17 +98,26 @@ public class RandomAccessTarArchiveFile extends InputStream implements Iterable<
     // reading
 
     public TarArchiveEntry seek(@NonNull String filename) throws IOException {
-        ArchiveEntryOffset entry = entries.get(filename);
-        if (entry == null) throw new RuntimeException("entry does not exist in archive: " + filename);
+        ArchiveEntryOffset archiveEntry = entries.get(filename);
+        if (archiveEntry == null) throw new RuntimeException("entry does not exist in archive: " + filename);
 
-        stream.seek(entry.offset);
+        stream.seek(archiveEntry.offset);
         tarStream = new TarArchiveInputStream(stream);
-        return tarStream.getNextTarEntry();
+        tarStream.getNextTarEntry();
+        return archiveEntry.entry;
+    }
+
+    public byte[] readFullEntry(@NonNull ArchiveEntryOffset entry) throws IOException {
+        return this.readFullEntry(entry.getName());
+    }
+
+    public byte[] readFullEntry(@NonNull TarArchiveEntry entry) throws IOException {
+        return this.readFullEntry(entry.getName());
     }
 
     public byte[] readFullEntry(@NonNull String filename) throws IOException {
-        TarArchiveEntry manifest = this.seek(filename);
-        byte[] buffer = new byte[(int) manifest.getSize()];
+        TarArchiveEntry entry = this.seek(filename);
+        byte[] buffer = new byte[(int) entry.getSize()];
         IOUtils.readFully(this, buffer);
         tarStream = null;
         return buffer;
@@ -121,7 +136,14 @@ public class RandomAccessTarArchiveFile extends InputStream implements Iterable<
         @Accessors(fluent = false)
         long offset;
 
+        @Accessors(fluent = false)
         @Delegate
         TarArchiveEntry entry;
+    }
+
+    @Value
+    public static class ArchiveFile {
+        RandomAccessTarArchiveFile archive;
+        ArchiveEntryOffset entry;
     }
 }
