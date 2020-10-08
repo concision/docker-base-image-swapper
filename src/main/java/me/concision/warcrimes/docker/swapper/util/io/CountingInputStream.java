@@ -1,4 +1,4 @@
-package me.concision.warcrimes.docker.swapper.util;
+package me.concision.warcrimes.docker.swapper.util.io;
 
 import lombok.NonNull;
 import org.apache.commons.compress.utils.IOUtils;

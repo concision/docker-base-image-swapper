@@ -1,4 +1,4 @@
-package me.concision.warcrimes.docker.swapper.util;
+package me.concision.warcrimes.docker.swapper.util.io;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -11,6 +11,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.pdfbox.io.RandomAccessBufferedFileInputStream;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +38,7 @@ public class RandomAccessTarArchiveFile extends InputStream implements Iterable<
         stream = new RandomAccessBufferedFileInputStream(file);
     }
 
-    @Delegate(types = {InputStream.class})
+    @Delegate(types = {InputStream.class}, excludes = {Closeable.class})
     @SneakyThrows(IOException.class)
     private TarArchiveInputStream tarStream() {
         this.createIndex();
@@ -122,6 +123,14 @@ public class RandomAccessTarArchiveFile extends InputStream implements Iterable<
         tarStream = null;
         return buffer;
     }
+
+    // closable
+
+    @Override
+    public void close() throws IOException {
+        stream.close();
+    }
+
 
     // structures
 
