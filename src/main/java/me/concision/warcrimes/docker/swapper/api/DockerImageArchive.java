@@ -29,14 +29,15 @@ public class DockerImageArchive {
     }
 
 
+    // TODO: write an RFC-compliant JSON library that does not suck
     public static DockerImageArchive from(@NonNull RandomAccessTarArchiveFile tarArchive) throws IOException {
         DockerImageArchive imageArchive = new DockerImageArchive();
 
-        // parse repositories
+        // file: repositories
         ArchiveEntryOffset repositoriesOffset = tarArchive.getEntry("repositories");
         if (repositoriesOffset != null) {
             imageArchive.repositoryEntry(repositoriesOffset.getEntry());
-            // parse manifest
+
             String repositoryString = new String(tarArchive.readFullEntry(repositoriesOffset));
             JsonObject repositoryJson;
             try {
@@ -47,12 +48,11 @@ public class DockerImageArchive {
             imageArchive.repositoryJson(repositoryJson);
         }
 
+        // file: manifest.json
         try {
-            // read manifest
             TarArchiveEntry manifestEntry = tarArchive.tryGetEntry("manifest.json").getEntry();
             imageArchive.manifestEntry(manifestEntry);
 
-            // parse manifest
             String manifestString = new String(tarArchive.readFullEntry(manifestEntry));
             JsonArray manifestJsonArray;
             try {
@@ -61,17 +61,11 @@ public class DockerImageArchive {
                 throw new JsonSyntaxException("failed to parse file as a JSON array", exception);
             }
 
-            // read each image in manifest
+            // manifest[i]
             for (int i = 0; i < manifestJsonArray.size(); i++) {
-                // read manifest element
                 JsonElement manifestElementJsonElement = manifestJsonArray.get(i);
-
-                // validate manifest element
-                if (!manifestElementJsonElement.isJsonObject()) {
+                if (!manifestElementJsonElement.isJsonObject())
                     throw new RuntimeException("unexpected non-object element in array: [" + i + "]");
-                }
-
-                // read manifest element
                 JsonObject manifestElementJsonObject = manifestElementJsonElement.getAsJsonObject();
                 try {
                     imageArchive.addImage(DockerImage.from(tarArchive, imageArchive, manifestElementJsonObject));
