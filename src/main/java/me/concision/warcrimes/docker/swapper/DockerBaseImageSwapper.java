@@ -3,10 +3,11 @@ package me.concision.warcrimes.docker.swapper;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import me.concision.warcrimes.docker.swapper.api.DockerImage;
 import me.concision.warcrimes.docker.swapper.api.DockerImageArchive;
+import me.concision.warcrimes.docker.swapper.transformer.ImageState;
+import me.concision.warcrimes.docker.swapper.transformer.ImageTransformer;
 import me.concision.warcrimes.docker.swapper.util.io.RandomAccessTarArchiveFile;
 
 import java.io.BufferedOutputStream;
@@ -27,10 +28,14 @@ public class DockerBaseImageSwapper {
     protected final List<RandomAccessTarArchiveFile> archives = new ArrayList<>();
     protected final List<DockerImageArchive> imageArchives = new ArrayList<>();
 
+    private ImageState imageState;
+
     public void execute() {
         try {
             this.index();
             this.parseImages();
+            this.scanImageTags();
+            this.swapBaseImages();
         } finally {
             this.cleanup();
         }
@@ -57,7 +62,6 @@ public class DockerBaseImageSwapper {
         }
     }
 
-    @SneakyThrows
     private void parseImages() {
         // parse archives
         log.info("Parsing images archive structures");
@@ -73,10 +77,65 @@ public class DockerBaseImageSwapper {
                 throw new RuntimeException("failed to read image configuration: " + archive.getFile().getAbsolutePath(), throwable);
             }
         }
+    }
 
-        DockerImageArchive imageArchive = imageArchives.get(0);
-        DockerImageArchive.write(imageArchive, new BufferedOutputStream(new FileOutputStream("test.tar")));
+    private void scanImageTags() {
+        log.info("Scanning image archives for tags: [" + args.oldBaseImageName + ", " + args.newBaseImageName + ", " + args.inputImageName + "]");
 
+        // grab old new
+        DockerImage oldImage;
+        DockerImage newImage;
+        DockerImage inputImage;
+        try {
+            oldImage = this.imageArchives.stream().flatMap(archive -> archive.images().stream())
+                    .filter(image -> image.repoTags().contains(args.oldBaseImageName))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("old base image not found: " + args.oldBaseImageName));
+            newImage = this.imageArchives.stream().flatMap(archive -> archive.images().stream())
+                    .filter(image -> image.repoTags().contains(args.newBaseImageName))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("new base image tag not found: " + args.newBaseImageName));
+            inputImage = this.imageArchives.stream().flatMap(archive -> archive.images().stream())
+                    .filter(image -> image.repoTags().contains(args.inputImageName))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("old base image not found: " + args.inputImageName));
+        } catch (RuntimeException throwable) {
+            throw new RuntimeException("failed to find an image tag", throwable);
+        }
+
+        this.imageState = new ImageState(args, oldImage, newImage, inputImage);
+        log.info(oldImage);
+        log.info(newImage);
+        log.info(inputImage);
+    }
+
+    private void swapBaseImages() {
+        log.info("Computing virtual transformation of input image with swapped base image");
+        for (ImageTransformer transformer : new ImageTransformer[]{
+                // check compatibility of old and app image
+                // create new archive and image
+                // add new image layers
+                // add app image layers
+                // relink last layer of new base image (if necessary)
+                // update internal hashes of later layers
+                // change ids of later layers of app image, relink parents
+                // reconcile state of laster layer + image layer
+                // change config seed with deterministic
+                // recompile manifest with new tag, config, layers
+        }) {
+            try {
+                transformer.transform(this.imageState);
+            } catch (Throwable throwable) {
+                throw new RuntimeException("failed image transformation at transformer: " + transformer.getClass().getName(), throwable);
+            }
+        }
+
+        log.info("Writing transformed image");
+        try {
+            DockerImageArchive.write(this.imageState.newArchive(), new BufferedOutputStream(new FileOutputStream(args.outputImageFile)));
+        } catch (Throwable throwable) {
+            log.fatal("Failed writing new swapped image archive", throwable);
+        }
     }
 
     private void cleanup() {

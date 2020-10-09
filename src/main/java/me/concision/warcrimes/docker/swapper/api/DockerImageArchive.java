@@ -134,7 +134,7 @@ public class DockerImageArchive {
         if (archive.repositoryEntry() != null) {
             entries.add(new TarEntry(
                     archive.repositoryEntry(),
-                    new ByteSource(archive.repositoryJson.toString().getBytes(StandardCharsets.ISO_8859_1))
+                    new ByteSource((archive.repositoryJson.toString() + '\n').getBytes(StandardCharsets.ISO_8859_1))
             ));
         }
 
@@ -157,7 +157,7 @@ public class DockerImageArchive {
         }
         entries.add(new TarEntry(
                 archive.manifestEntry(),
-                new ByteSource(manifestArray.toString().getBytes(StandardCharsets.ISO_8859_1))
+                new ByteSource((manifestArray.toString() + '\n').getBytes(StandardCharsets.ISO_8859_1))
         ));
 
 

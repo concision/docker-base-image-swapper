@@ -19,6 +19,7 @@ public class CommandArguments {
 
     // application images
     public final String inputImageName;
+    public final String outputImageName;
     public final File outputImageFile;
 
     // Docker image archives
@@ -28,10 +29,11 @@ public class CommandArguments {
         return new CommandArguments(
                 namespace,
                 // base images
-                namespace.getString("base_image_old"),
-                namespace.getString("base_image_new"),
+                namespace.getString("base_image_old_tag"),
+                namespace.getString("base_image_new_tag"),
                 // input/output
-                namespace.get("image_input"),
+                namespace.get("image_input_tag"),
+                namespace.get("image_output_tag"),
                 namespace.get("image_output"),
                 // images
                 namespace.getList("images")

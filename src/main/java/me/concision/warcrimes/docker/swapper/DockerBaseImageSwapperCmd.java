@@ -28,29 +28,36 @@ public class DockerBaseImageSwapperCmd {
                 .usage("java -jar docker-base-image-swapper.jar")
                 .description("A CLI tool to swap out the base image of an already-existing built Docker image.");
 
-        parser.addArgument("--old-base-image")
-                .help("The .tar archive of the old base image that will be replaced in the application image")
+        parser.addArgument("--old-base-tag")
+                .help("The tag of the old base image that will be replaced in the application image")
                 .metavar("image:tag")
-                .dest("base_image_old")
+                .dest("base_image_old_tag")
                 .required(true)
                 .type(String.class);
 
-        parser.addArgument("--new-base-image")
-                .help("The .tar archive of the new base image that the application image will be swapped to")
+        parser.addArgument("--new-base-tag")
+                .help("The tag of the new base image that the application image will be swapped to")
                 .metavar("image:tag")
-                .dest("base_image_new")
+                .dest("base_image_new_tag")
                 .required(true)
                 .type(String.class);
 
-        parser.addArgument("--input-image")
-                .help("The .tar archive of the application image that needs the base image swapped")
+        parser.addArgument("--input-tag")
+                .help("The tag of the application image that needs the base image swapped")
                 .metavar("image:tag")
-                .dest("image_input")
+                .dest("image_input_tag")
+                .required(true)
+                .type(String.class);
+
+        parser.addArgument("--output-tag")
+                .help("The output tag of the new built application image")
+                .metavar("image:tag")
+                .dest("image_output_tag")
                 .required(true)
                 .type(String.class);
 
         parser.addArgument("--output-image")
-                .help("The file path to write the new .tar archived of the newly created application image.\n" +
+                .help("The file path to write the new .tar archived of the new built application image.\n" +
                         "If unspecified, writes to standard out.")
                 .metavar("swapped-base-app-image.tar")
                 .dest("image_output")
@@ -58,7 +65,7 @@ public class DockerBaseImageSwapperCmd {
                 .type(Arguments.fileType().verifyCanCreate());
 
         parser.addArgument("images")
-                .help("List of Docker image archives")
+                .help("List of Docker image archives to search for tagged images")
                 .metavar("image.tar")
                 .dest("images")
                 .required(true)
