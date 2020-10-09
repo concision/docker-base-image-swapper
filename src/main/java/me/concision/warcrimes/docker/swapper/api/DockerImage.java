@@ -21,9 +21,6 @@ import java.util.List;
 @Log4j2
 @Data
 public class DockerImage {
-    @ToString.Exclude
-    protected DockerImageArchive imageArchive;
-
     // manifest[i]
     protected JsonObject manifestElementJson;
 
@@ -52,8 +49,6 @@ public class DockerImage {
             @NonNull JsonObject manifestElementJsonObject
     ) throws IOException {
         DockerImage image = new DockerImage();
-
-        image.imageArchive(imageArchive);
         image.manifestElementJson(manifestElementJsonObject);
 
         // manifest[i].Config
