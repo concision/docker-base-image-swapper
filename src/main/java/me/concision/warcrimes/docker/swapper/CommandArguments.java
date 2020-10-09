@@ -32,8 +32,8 @@ public class CommandArguments {
                 namespace.getString("base_image_old_tag"),
                 namespace.getString("base_image_new_tag"),
                 // input/output
-                namespace.get("image_input_tag"),
-                namespace.get("image_output_tag"),
+                namespace.getString("image_input_tag"),
+                namespace.getString("image_output_tag"),
                 namespace.get("image_output"),
                 // images
                 namespace.getList("images")

@@ -8,6 +8,13 @@ import me.concision.warcrimes.docker.swapper.api.DockerImage;
 import me.concision.warcrimes.docker.swapper.api.DockerImageArchive;
 import me.concision.warcrimes.docker.swapper.transformer.ImageState;
 import me.concision.warcrimes.docker.swapper.transformer.ImageTransformer;
+import me.concision.warcrimes.docker.swapper.transformers.T01ValidateCompatibility;
+import me.concision.warcrimes.docker.swapper.transformers.T02CreateArchive;
+import me.concision.warcrimes.docker.swapper.transformers.T03ImageLayers;
+import me.concision.warcrimes.docker.swapper.transformers.T04RelinkLastLayerConfig;
+import me.concision.warcrimes.docker.swapper.transformers.T05RelinkLayerIds;
+import me.concision.warcrimes.docker.swapper.transformers.T07LinkOutputTag;
+import me.concision.warcrimes.docker.swapper.transformers.T08NewConfigName;
 import me.concision.warcrimes.docker.swapper.util.io.RandomAccessTarArchiveFile;
 
 import java.io.BufferedOutputStream;
@@ -113,15 +120,21 @@ public class DockerBaseImageSwapper {
         log.info("Computing virtual transformation of input image with swapped base image");
         for (ImageTransformer transformer : new ImageTransformer[]{
                 // check compatibility of old and app image
+                new T01ValidateCompatibility(),
                 // create new archive and image
-                // add new image layers
-                // add app image layers
+                new T02CreateArchive(),
+                // add new image and app image layers
+                new T03ImageLayers(),
                 // relink last layer of new base image (if necessary)
-                // update internal hashes of later layers
-                // change ids of later layers of app image, relink parents
-                // reconcile state of laster layer + image layer
-                // change config seed with deterministic
+                new T04RelinkLastLayerConfig(),
+                // change ids of later layers of app image, relink parents; update internal director hashes deterministically
+                new T05RelinkLayerIds(),
+                // reconcile image configuration state of last layer + image layer
+
                 // recompile manifest with new tag, config, layers
+                new T07LinkOutputTag(),
+                // change config seed with deterministic hash
+                new T08NewConfigName(),
         }) {
             try {
                 transformer.transform(this.imageState);
@@ -132,7 +145,7 @@ public class DockerBaseImageSwapper {
 
         log.info("Writing transformed image");
         try {
-            DockerImageArchive.write(this.imageState.newArchive(), new BufferedOutputStream(new FileOutputStream(args.outputImageFile)));
+            DockerImageArchive.write(this.imageState.outArchive(), new BufferedOutputStream(new FileOutputStream(args.outputImageFile)));
         } catch (Throwable throwable) {
             log.fatal("Failed writing new swapped image archive", throwable);
         }

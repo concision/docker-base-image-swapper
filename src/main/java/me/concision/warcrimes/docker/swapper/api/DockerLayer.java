@@ -12,8 +12,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Data
 public class DockerLayer {
@@ -25,11 +25,11 @@ public class DockerLayer {
     protected DockerLayerManifest manifest;
 
     // processed manifest[i].Layers: all files from layer directory, including configuration
-    protected List<ArchiveFile> files = new ArrayList<>();
+    protected Map<String, ArchiveFile> files = new LinkedHashMap<>();
 
 
-    public void addFile(@NonNull ArchiveFile file) {
-        files.add(file);
+    public void addFile(String file, @NonNull ArchiveFile archiveFile) {
+        files.put(file, archiveFile);
     }
 
 
@@ -75,8 +75,8 @@ public class DockerLayer {
         for (ArchiveEntryOffset entry : tarArchive) {
             if (entry.getName().startsWith(layerRootPath)) {
                 // ignore manifest
-                if (!entry.getName().equals(layerRootPath + "json")) {
-                    layer.addFile(new ArchiveFile(tarArchive, entry));
+                if (!entry.getName().equals(layerRootPath + "json") && !entry.getName().equals(layerRootPath)) {
+                    layer.addFile(entry.getName(), new ArchiveFile(tarArchive, entry));
                 }
             }
         }

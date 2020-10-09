@@ -61,7 +61,7 @@ public class DockerBaseImageSwapperCmd {
                         "If unspecified, writes to standard out.")
                 .metavar("swapped-base-app-image.tar")
                 .dest("image_output")
-                .required(false)
+                .required(true)
                 .type(Arguments.fileType().verifyCanCreate());
 
         parser.addArgument("images")

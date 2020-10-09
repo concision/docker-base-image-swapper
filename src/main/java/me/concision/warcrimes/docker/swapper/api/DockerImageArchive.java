@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import com.rits.cloning.Cloner;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class DockerImageArchive {
@@ -167,15 +169,25 @@ public class DockerImageArchive {
                 JsonObject manifestJson = manifest.json.deepCopy();
                 if (manifest.config != null) {
                     manifestJson.add("config", manifest.config.json());
+                } else {
+                    manifestJson.remove("config");
                 }
                 manifestJson.add("container_config", manifest.containerConfig.json());
+
+
+                entries.add(new TarEntry(
+                        layer.rootDirectory,
+                        new ByteSource(new byte[0])
+                ));
                 entries.add(new TarEntry(
                         layer.manifestEntry,
                         new ByteSource(manifestJson.toString().getBytes(StandardCharsets.ISO_8859_1))
                 ));
 
-                for (ArchiveFile file : layer.files) {
-                    entries.add(new TarEntry(file.entry().getEntry(), new ArchiveSource(file)));
+                for (Map.Entry<String, ArchiveFile> file : layer.files.entrySet()) {
+                    TarArchiveEntry archiveEntry = new Cloner().deepClone(file.getValue().entry().getEntry());
+                    archiveEntry.setName(file.getKey());
+                    entries.add(new TarEntry(archiveEntry, new ArchiveSource(file.getValue())));
                 }
             }
 
