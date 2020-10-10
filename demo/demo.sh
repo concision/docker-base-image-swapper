@@ -49,4 +49,4 @@ echo "[TEST]" "Output from running swapped-base image:"
 docker run --rm test-app:transformed
 
 # cleanup
-#rm images.tar transformed.tar
+rm images.tar transformed.tar
