@@ -103,23 +103,38 @@ public class T06ReconcileConfiguration implements ImageTransformer {
             }
             JsonArray newEnv = newJson.get("Env") != null && !newJson.get("Env").isJsonNull() ? newJson.getAsJsonArray("Env") : null;
             if (newEnv != null) {
+                outer:
                 for (int i = 0; i < newEnv.size(); i++) {
-                    outEnv.add(newEnv.get(i).getAsString());
+                    String env = newEnv.get(i).getAsString();
+
+                    if (!outEnv.contains(new JsonPrimitive(env))) {
+                        if (0 <= env.indexOf('=')) {
+                            String name = env.substring(0, env.indexOf('='));
+
+                            for (int j = 0; j < outEnv.size(); j++) {
+                                String outEnvVar = outEnv.get(j).getAsString();
+                                if (outEnvVar.startsWith(name + "=")) {
+                                    continue outer;
+                                }
+                            }
+                        }
+
+                        outEnv.add(env);
+                    }
                 }
             }
 
             // reconcile special PATH
             if (oldEnv != null && newEnv != null) {
                 String oldPath = null;
-
                 for (int i = 0; i < oldEnv.size(); i++) {
                     String asString = oldEnv.get(i).getAsString();
                     if (asString.startsWith("PATH=")) {
                         oldPath = asString.substring("PATH=".length());
-                        ;
                         break;
                     }
                 }
+
                 String newPath = null;
                 for (int i = 0; i < newEnv.size(); i++) {
                     String asString = newEnv.get(i).getAsString();
