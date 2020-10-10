@@ -2,7 +2,7 @@
 
 This is a work-in-progress proof-of-concept project that enables swapping the base image of an already-built application Docker image. While normally Docker images _should_ be rebuilt from sources using a different base image, there are some scenarios where this is not possible. This CLI tool directly manipulates Docker image archives to change the base image (bottom layers) of an existing image, without building the image from the original application sources.
 
-The bottom layers in the application are swapped out, and all configuration that is inherited from the old base image is reconciled with the new base image. The container configuration will be updated to inherit the following command configurations from the new base image: `ENV`,` `USER`, `CMD`, `WORKDIR`, `ENTRYPOINT`, `EXPOSE`, `VOLUME`, `LABEL`.
+The bottom layers in the application are swapped out, and all configuration that is inherited from the old base image is reconciled with the new base image. The container configuration will be updated to inherit the following command configurations from the new base image: `CMD`, `ENTRYPOINT`, `ENV`, `EXPOSE`, `LABEL`, `USER`, `VOLUME`, `WORKDIR`.
 
 > This process is error-prone and may have various bugs; furthermore, the tool is not written terribly well. **Use at your own risk.**
 
