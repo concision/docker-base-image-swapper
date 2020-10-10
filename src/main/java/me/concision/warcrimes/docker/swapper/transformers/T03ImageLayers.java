@@ -1,9 +1,11 @@
 package me.concision.warcrimes.docker.swapper.transformers;
 
+import com.rits.cloning.Cloner;
 import me.concision.warcrimes.docker.swapper.api.DockerImageConfig.HistoryRecord;
 import me.concision.warcrimes.docker.swapper.api.DockerLayer;
 import me.concision.warcrimes.docker.swapper.transformer.ImageState;
 import me.concision.warcrimes.docker.swapper.transformer.ImageTransformer;
+import me.concision.warcrimes.docker.swapper.util.io.RandomAccessTarArchiveFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +16,16 @@ public class T03ImageLayers implements ImageTransformer {
         // layers
         {
             List<DockerLayer> layers = new ArrayList<>();
-            layers.addAll(state.newImage().layers());
+            for (DockerLayer layer : state.newImage().layers()) {
+                Cloner cloner = new Cloner();
+                cloner.dontCloneInstanceOf(RandomAccessTarArchiveFile.ArchiveFile.class);
+                layers.add(cloner.shallowClone(layer));
+            }
             List<DockerLayer> inputLayers = state.inputImage().layers();
             for (int i = state.oldImage().layers().size(); i < inputLayers.size(); i++) {
-                layers.add(inputLayers.get(i));
+                Cloner cloner = new Cloner();
+                cloner.dontCloneInstanceOf(RandomAccessTarArchiveFile.ArchiveFile.class);
+                layers.add(cloner.deepClone(inputLayers.get(i)));
             }
             state.outImage().layers(layers);
         }

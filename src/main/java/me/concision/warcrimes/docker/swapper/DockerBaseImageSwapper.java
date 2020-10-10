@@ -13,6 +13,7 @@ import me.concision.warcrimes.docker.swapper.transformers.T02CreateArchive;
 import me.concision.warcrimes.docker.swapper.transformers.T03ImageLayers;
 import me.concision.warcrimes.docker.swapper.transformers.T04RelinkLastLayerConfig;
 import me.concision.warcrimes.docker.swapper.transformers.T05RelinkLayerIds;
+import me.concision.warcrimes.docker.swapper.transformers.T06ReconcileConfiguration;
 import me.concision.warcrimes.docker.swapper.transformers.T07LinkOutputTag;
 import me.concision.warcrimes.docker.swapper.transformers.T08NewConfigName;
 import me.concision.warcrimes.docker.swapper.util.io.RandomAccessTarArchiveFile;
@@ -130,7 +131,7 @@ public class DockerBaseImageSwapper {
                 // change ids of later layers of app image, relink parents; update internal director hashes deterministically
                 new T05RelinkLayerIds(),
                 // reconcile image configuration state of last layer + image layer
-
+                new T06ReconcileConfiguration(),
                 // recompile manifest with new tag, config, layers
                 new T07LinkOutputTag(),
                 // change config seed with deterministic hash
@@ -147,8 +148,9 @@ public class DockerBaseImageSwapper {
         try {
             DockerImageArchive.write(this.imageState.outArchive(), new BufferedOutputStream(new FileOutputStream(args.outputImageFile)));
         } catch (Throwable throwable) {
-            log.fatal("Failed writing new swapped image archive", throwable);
+            throw new RuntimeException("failed writing new swapped image archive", throwable);
         }
+        log.info("Wrote transformed image: " + args.outputImageFile.getAbsolutePath());
     }
 
     private void cleanup() {
