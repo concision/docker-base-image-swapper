@@ -94,7 +94,6 @@ public class T06ReconcileConfiguration implements ImageTransformer {
                     String env = inputEnv.get(i).getAsString();
                     if (!oldEnv.contains(new JsonPrimitive(env))) {
                         outEnv.add(env);
-                        if (env.startsWith("PATH=")) isPathHandled = true;
                     }
                 }
             } else {
@@ -110,34 +109,33 @@ public class T06ReconcileConfiguration implements ImageTransformer {
             }
 
             // reconcile special PATH
-            if (!isPathHandled) {
-                if (oldEnv != null && newEnv != null) {
-                    String oldPath = null;
+            if (oldEnv != null && newEnv != null) {
+                String oldPath = null;
 
-                    for (int i = 0; i < oldEnv.size(); i++) {
-                        String asString = oldEnv.get(i).getAsString();
-                        if (asString.startsWith("PATH=")) {
-                            oldPath = asString.substring("PATH=".length());;
-                            break;
-                        }
+                for (int i = 0; i < oldEnv.size(); i++) {
+                    String asString = oldEnv.get(i).getAsString();
+                    if (asString.startsWith("PATH=")) {
+                        oldPath = asString.substring("PATH=".length());
+                        ;
+                        break;
                     }
-                    String newPath = null;
-                    for (int i = 0; i < newEnv.size(); i++) {
-                        String asString = newEnv.get(i).getAsString();
-                        if (asString.startsWith("PATH=")) {
-                            newPath = asString.substring("PATH=".length());
-                            break;
-                        }
-                    }
-
-                    if (oldPath != null && newPath != null)
-                        for (int i = 0; i < outEnv.size(); i++) {
-                            String env = outEnv.get(i).getAsString();
-                            if (env.startsWith("PATH=")) {
-                                outEnv.set(i, new JsonPrimitive(env.replace(oldPath, newPath)));
-                            }
-                        }
                 }
+                String newPath = null;
+                for (int i = 0; i < newEnv.size(); i++) {
+                    String asString = newEnv.get(i).getAsString();
+                    if (asString.startsWith("PATH=")) {
+                        newPath = asString.substring("PATH=".length());
+                        break;
+                    }
+                }
+
+                if (oldPath != null && newPath != null)
+                    for (int i = 0; i < outEnv.size(); i++) {
+                        String env = outEnv.get(i).getAsString();
+                        if (env.startsWith("PATH=")) {
+                            outEnv.set(i, new JsonPrimitive(env.replace(oldPath, newPath)));
+                        }
+                    }
             }
             outJson.add("Env", outEnv);
         } else {

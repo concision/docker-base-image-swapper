@@ -112,9 +112,6 @@ public class DockerBaseImageSwapper {
         }
 
         this.imageState = new ImageState(args, oldImage, newImage, inputImage);
-        log.info(oldImage);
-        log.info(newImage);
-        log.info(inputImage);
     }
 
     private void swapBaseImages() {
