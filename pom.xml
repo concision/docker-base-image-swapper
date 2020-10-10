@@ -100,6 +100,14 @@
                             <shadedArtifactAttached>false</shadedArtifactAttached>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <minimizeJar>true</minimizeJar>
+                            <transformers>
+                                <!-- Specify entrypoint -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Main-Class>me.concision.warcrimes.docker.swapper.DockerBaseImageSwapperCmd</Main-Class>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
                             <filters>
                                 <!-- Filter Java 9 module-info.java descriptors -->
                                 <filter>
@@ -108,6 +116,12 @@
                                         <!-- Strip module-info from dependencies (e.g. META-INF/versions/*/module-info.class) -->
                                         <exclude>**/module-info.class</exclude>
                                     </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.logging.log4j:*</artifact>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
                                 </filter>
                             </filters>
                         </configuration>
