@@ -1,0 +1,17 @@
+# key definitions: https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package]
+name = "docker-rebaser"
+version = "0.1.0"
+authors = ["Concision <contact@concision.me>"]
+edition = "2018"
+
+repository = "https://github.com/concision/docker-base-image-swapper"
+readme = "README.md"
+license-file = "LICENSE"
+
+keywords = ["docker"]
+categories = ["command-line-interface"]
+
+
+[dependencies]
